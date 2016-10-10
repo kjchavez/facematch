@@ -1,0 +1,21 @@
+20
+William_Burns	1	2
+William_Macy	1	4
+William_Macy	2	3
+William_Macy	3	5
+William_Rehnquist	1	2
+Winona_Ryder	6	15
+Winona_Ryder	19	21
+Yevgeny_Kafelnikov	3	4
+Yoriko_Kawaguchi	3	10
+Zoran_Djindjic	3	4
+AJ_Lamas	1	Zach_Safrin	1
+Aaron_Guiel	1	Reese_Witherspoon	3
+Aaron_Tippin	1	Jose_Luis_Rodriguez_Zapatero	1
+Abdul_Majeed_Shobokshi	1	Charles_Cope	1
+Abdullah_Gul	16	Steve_Cox	1
+Abid_Hamid_Mahmud_Al-Tikriti	1	Eli_Broad	1
+Adam_Kennedy	1	Amelie_Mauresmo	19
+Adel_Al-Jubeir	1	Elisabeth_Welch	1
+Adrian_Murrell	1	Tommy_Franks	15
+Adriana_Lima	1	Terrence_Trammell	1
