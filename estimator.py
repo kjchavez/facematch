@@ -68,7 +68,7 @@ def model_fn(features, targets, mode):
 
     prod = embedding1*embedding2
     print("Product of embeddings:", prod)
-    logit = tf.reduce_sum(prod, 1, keep_dims=True)
+    logit = tf.reduce_sum(prod, 1)
     tf.histogram_summary("logits", logit)
 
     prediction = tf.nn.sigmoid(logit)
