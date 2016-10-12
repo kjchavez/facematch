@@ -5,6 +5,7 @@ from tensorflow.python.ops import parsing_ops
 
 train_filename = "/home/kevin/projects/faces/pairsDevTrain.tfrecord"
 dev_filename = "/home/kevin/projects/faces/pairsDevTest.tfrecord"
+sanity_check_filename = "/home/kevin/projects/faces/pairsDevSanityCheck.tfrecord"
 
 ORIG_SHAPE = (250, 250, 3)
 
@@ -30,9 +31,11 @@ def get_feature_input(filepattern, batch_size=1):
 
     image1 = tf.cast(tf.decode_raw(features['image1_raw'], tf.uint8),
                      tf.float32)
+    image1 = tf.reshape(image1, (-1, 250, 250, 3))
 
     image2 = tf.cast(tf.decode_raw(features['image2_raw'], tf.uint8),
                      tf.float32)
+    image2 = tf.reshape(image2, (-1, 250, 250, 3))
 
     return {'image1': preprocess(image1), 'image2': preprocess(image2)}, label
 
@@ -41,3 +44,6 @@ def get_train_data(batch_size=1):
 
 def get_eval_data(batch_size=1):
     return get_feature_input(dev_filename, batch_size=batch_size)
+
+def get_sanity_check_data(batch_size=1):
+    return get_feature_input(sanity_check_filename, batch_size=batch_size)
