@@ -21,6 +21,7 @@ def conv_layer(name, shape, image):
                                       initializer=tf.random_normal_initializer(
                                           mean=0.0, stddev=np.sqrt(2.0/N)))
 
+    tf.add_to_collection(tf.GraphKeys.WEIGHTS, kernel)
 
     b = variables.model_variable('%s_b' % (name,),
                                  initializer=tf.zeros_initializer([shape[-1]]))
@@ -53,7 +54,12 @@ def embed(image):
 def resize_image(images, size):
     return tf.image.resize_images(images, size)
 
-def model_fn(features, targets, mode):
+def model_fn(features, targets, mode, params):
+    # Extract hyperparameters.
+    reg = params['reg']
+    lr = params['lr']
+    momentum = params['momentum']
+
     image1 = resize_image(features['image1'], (128, 128))
     image2 = resize_image(features['image2'], (128, 128))
     label = tf.cast(targets, tf.float32)
@@ -66,18 +72,25 @@ def model_fn(features, targets, mode):
         embedding2 = embed(image2)
         #embedding2 = tf.nn.l2_normalize(embedding2, 1)
 
+    # Apply regularization to weights
+    regularizer = tf.contrib.layers.l2_regularizer(reg)
+    reg_loss = tf.contrib.layers.apply_regularization(regularizer)
+    print("WEIGHTS:", tf.get_collection(tf.GraphKeys.WEIGHTS))
+
     prod = embedding1*embedding2
     print("Product of embeddings:", prod)
     logit = tf.reduce_sum(prod, 1)
     tf.histogram_summary("logits", logit)
 
-    prediction = tf.nn.sigmoid(logit)
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(logit, label)
+    prediction = tf.nn.sigmoid(logit) > 0.5
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(logit, label) + reg_loss
     mean_loss = tf.reduce_mean(loss)
 
     # Compute a dummy loss, gradient, train_op
-    optimizer = tf.train.RMSPropOptimizer(1e-4)
+    optimizer = tf.train.RMSPropOptimizer(lr, momentum=momentum)
     global_step = variables.get_global_step()
+
+    # Need to add summary for GRADIENTS!!
     train_op = optimizer.minimize(mean_loss, global_step=global_step)
 
     return (prediction, mean_loss, train_op)
@@ -120,13 +133,16 @@ def baseline_model_fn(features, targets, mode):
     return (prediction, mean_loss, train_op)
 
 
-config = tf.contrib.learn.RunConfig(save_checkpoints_secs=60)
+config = tf.contrib.learn.RunConfig(save_checkpoints_secs=30)
+params = { "lr": 1e-4, "momentum": 0, "reg": 1e-3 }
 estimator = tf.contrib.learn.Estimator(model_fn=model_fn,
-                                       model_dir="/tmp/test", config=config)
+                                       model_dir="/tmp/test", config=config,
+                                       params=params)
 
+validation_metrics = {"accuracy": tf.contrib.metrics.streaming_accuracy}
 validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
     input_fn=lambda: get_eval_data(batch_size=32), eval_steps=16,
-    every_n_steps=1000)
+    every_n_steps=1000, metrics=validation_metrics)
 grad_monitor = tf.contrib.learn.monitors.SummarySaver(tf.merge_all_summaries(),
                                                       save_steps=100,
                                                       output_dir="/tmp/test")
